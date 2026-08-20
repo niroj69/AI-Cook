@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fridge Chef</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="theme-color" content="#20291F" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Work+Sans:wght@400;500;600;700&family=Caveat:wght@600&display=swap');
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: #20291F;
+    font-family: 'Work Sans', sans-serif;
+    color: #F3EDE0;
+    padding: 40px 16px 64px;
+  }
+  .container { max-width: 640px; margin: 0 auto; position: relative; }
+  .header { text-align: center; margin-bottom: 28px; position: relative; }
+  .badge {
+    width: 52px; height: 52px; border-radius: 50%; background: #D9A441;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+    font-size: 24px;
+  }
+  h1.title { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 34px; margin: 0; color: #F3EDE0; }
+  .subtitle { font-family: 'Caveat', cursive; font-size: 20px; color: #B9C2AD; margin: 4px 0 0; }
+  .gear-btn {
+    position: absolute; top: 0; right: 0; border: 1px solid #3A4636; background: #28332A; color: #B9C2AD;
+    border-radius: 10px; width: 38px; height: 38px; cursor: pointer; font-size: 16px;
+  }
+  .gear-btn:hover { color: #F3EDE0; border-color: #D9A441; }
+  .card {
+    background: #28332A; border: 1px solid #3A4636; border-radius: 18px;
+    padding: 22px 22px 20px; margin-bottom: 22px;
+  }
+  .label {
+    font-size: 13px; font-weight: 600; color: #B9C2AD; display: block; margin-bottom: 8px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .input-wrap {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    background: #1B231A; border: 1px solid #3A4636; border-radius: 12px;
+    padding: 10px 12px; transition: border-color .12s ease;
+  }
+  .input-wrap:focus-within { border-color: #D9A441; }
+  .chip {
+    display: flex; align-items: center; gap: 6px; background: #3A4636; color: #F3EDE0;
+    border-radius: 999px; padding: 5px 6px 5px 12px; font-size: 14px; font-weight: 500;
+  }
+  .chip-remove {
+    border: none; background: rgba(243,237,224,0.15); color: #F3EDE0; opacity: 0.7;
+    border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 11px; line-height: 1;
+  }
+  .chip-remove:hover { opacity: 1; }
+  #ingredient-input {
+    flex: 1; min-width: 140px; border: none; background: transparent; color: #F3EDE0;
+    font-size: 15px; outline: none; padding: 4px 2px; font-family: 'Work Sans', sans-serif;
+  }
+  .suggestions-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .suggestion-chip {
+    display: flex; align-items: center; gap: 4px; border: 1px dashed #4A5744; background: transparent;
+    color: #B9C2AD; border-radius: 999px; padding: 5px 11px 5px 9px; font-size: 13px; cursor: pointer;
+    transition: all .12s ease; font-family: 'Work Sans', sans-serif;
+  }
+  .suggestion-chip:hover { background: #2B362A; border-color: #D9A441; color: #F3EDE0; }
+  .error-text { color: #E9A28C; font-size: 13px; margin-top: 10px; font-weight: 500; }
+  .actions { display: flex; gap: 10px; margin-top: 18px; }
+  .btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; border-radius: 12px; padding: 12px 0; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: background .12s ease; font-family: 'Work Sans', sans-serif;
+  }
+  .btn-primary { background: #D9A441; color: #20291F; }
+  .btn-primary:hover:not(:disabled) { background: #E4B655; }
+  .btn-secondary { background: #C1440E; color: #F3EDE0; }
+  .btn-secondary:hover:not(:disabled) { background: #D4551A; }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .spin { display: inline-block; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-card {
+    display: flex; align-items: center; gap: 10px; justify-content: center;
+    color: #B9C2AD; font-size: 14px; padding: 18px 0;
+  }
+  .result-card {
+    position: relative; background: #FBF6EC; color: #2A2620; border-radius: 4px;
+    padding: 30px 28px 26px; box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+    animation: fade .35s ease;
+  }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .pin {
+    position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+    width: 16px; height: 16px; border-radius: 50%; background: #C1440E;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .eyebrow { font-family: 'Caveat', cursive; font-size: 18px; color: #8C7A4E; text-align: center; }
+  .dish-name { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 30px; margin: 2px 0 6px; text-align: center; color: #20291F; }
+  .tagline { text-align: center; font-size: 15px; color: #5C5544; font-style: italic; margin: 0 auto; max-width: 460px; }
+  .divider {
+    height: 1px; margin: 20px 0;
+    background: repeating-linear-gradient(to right, #D8CFB8 0, #D8CFB8 6px, transparent 6px, transparent 11px);
+  }
+  .lists-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .list-heading {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em; color: #6B6350; margin: 0 0 10px;
+  }
+  ul.plain-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .list-item { display: flex; align-items: center; gap: 9px; font-size: 14.5px; color: #2A2620; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #4B6B3A; flex-shrink: 0; }
+  .dot.extra { background: #C1440E; }
+  .no-extras { font-size: 14px; color: #8C7A4E; font-style: italic; margin: 0; }
+  ol.steps { list-style: none; margin: 0; padding: 0; }
+  .step { display: flex; gap: 12px; font-size: 15px; line-height: 1.5; margin-bottom: 14px; color: #2A2620; }
+  .step:last-child { margin-bottom: 0; }
+  .step-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: #20291F; color: #F3EDE0;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    align-items: center; justify-content: center; z-index: 50; padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #28332A; border: 1px solid #3A4636; border-radius: 16px; padding: 22px;
+    max-width: 420px; width: 100%;
+  }
+  .modal h2 { font-family: 'Playfair Display', serif; font-size: 20px; margin: 0 0 8px; color: #F3EDE0; }
+  .modal p { font-size: 13.5px; color: #B9C2AD; line-height: 1.5; margin: 0 0 14px; }
+  .modal input {
+    width: 100%; border: 1px solid #3A4636; background: #1B231A; color: #F3EDE0;
+    border-radius: 9px; padding: 10px 12px; font-size: 14px; margin-bottom: 14px;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .modal-actions button {
+    border-radius: 9px; padding: 9px 16px; font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: 'Work Sans', sans-serif; border: none;
+  }
+  .modal-cancel { background: transparent; color: #B9C2AD; border: 1px solid #3A4636 !important; }
+  .modal-save { background: #D9A441; color: #20291F; }
+  button:focus-visible, input:focus-visible { outline: 2px solid #D9A441; outline-offset: 2px; }
+  @media (max-width: 560px) {
+    .actions { flex-direction: column; }
+    .lists-grid { grid-template-columns: 1fr; gap: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="badge">👨‍🍳</div>
+      <h1 class="title">Fridge Chef</h1>
+      <p class="subtitle">tell me what's in the kitchen, I'll tell you what to make</p>
+    </div>
+
+    <div class="card">
+      <label class="label">What do you have on hand?</label>
+      <div class="input-wrap" id="input-wrap">
+        <input id="ingredient-input" type="text" placeholder="type an ingredient, press Enter…" />
+      </div>
+      <div class="suggestions-row" id="suggestions-row"></div>
+      <div class="error-text" id="error-text" style="display:none;"></div>
+      <div class="actions">
+        <button class="btn btn-primary" id="suggest-btn"><span>🔥</span> Suggest a dish</button>
+        <button class="btn btn-secondary" id="surprise-btn"><span>✨</span> Surprise me</button>
+      </div>
+    </div>
+
+    <div class="loading-card" id="loading-card" style="display:none;">
+      <span class="spin">⏳</span>
+      <span id="loading-text">Working out what to cook…</span>
+    </div>
+
+    <div id="result-container"></div>
+  </div>
+
+<script>
+  // ─────────────────────────────────────────────────────────────────
+  // SITE OWNER: paste your Gemini API key below before hosting this file.
+  // Get one at https://aistudio.google.com/apikey
+  // Then, in Google Cloud Console (APIs & Services → Credentials → this key
+  // → Application restrictions → "Websites"), restrict it to the exact
+  // domain you host this file on. That way the key only works when loaded
+  // from your site — visitors never see or enter a key themselves.
+  // ─────────────────────────────────────────────────────────────────
+  const GEMINI_API_KEY = "AQ.Ab8RN6Lq2_DpYZE7s4gOUzP_lhkaDPVVgor2eabE8PBbdG6YTA";
+
+  const SUGGESTIONS = ["eggs", "rice", "chicken", "onion", "garlic", "tomato", "cheese", "spinach", "pasta", "potatoes"];
+
+  let ingredients = [];
+  let loading = false;
+
+  const inputWrap = document.getElementById("input-wrap");
+  const inputEl = document.getElementById("ingredient-input");
+  const suggestionsRow = document.getElementById("suggestions-row");
+  const errorText = document.getElementById("error-text");
+  const suggestBtn = document.getElementById("suggest-btn");
+  const surpriseBtn = document.getElementById("surprise-btn");
+  const loadingCard = document.getElementById("loading-card");
+  const loadingText = document.getElementById("loading-text");
+  const resultContainer = document.getElementById("result-container");
+
+  function renderChips() {
+    inputWrap.querySelectorAll(".chip").forEach(c => c.remove());
+    ingredients.forEach(ing => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = ing;
+      const rm = document.createElement("button");
+      rm.className = "chip-remove";
+      rm.setAttribute("aria-label", "Remove " + ing);
+      rm.textContent = "✕";
+      rm.onclick = () => { ingredients = ingredients.filter(i => i !== ing); renderChips(); renderSuggestions(); };
+      chip.appendChild(rm);
+      inputWrap.insertBefore(chip, inputEl);
+    });
+    inputEl.placeholder = ingredients.length === 0 ? "type an ingredient, press Enter…" : "add another…";
+  }
+
+  function renderSuggestions() {
+    suggestionsRow.innerHTML = "";
+    if (ingredients.length > 0) return;
+    SUGGESTIONS.forEach(s => {
+      const btn = document.createElement("button");
+      btn.className = "suggestion-chip";
+      btn.innerHTML = "+ " + s;
+      btn.onclick = () => addIngredient(s);
+      suggestionsRow.appendChild(btn);
+    });
+  }
+
+  function addIngredient(raw) {
+    const val = raw.trim().replace(/,+$/, "");
+    if (!val) return;
+    if (!ingredients.some(i => i.toLowerCase() === val.toLowerCase())) ingredients.push(val);
+    inputEl.value = "";
+    renderChips();
+    renderSuggestions();
+  }
+
+  inputEl.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addIngredient(inputEl.value);
+    } else if (e.key === "Backspace" && inputEl.value === "" && ingredients.length > 0) {
+      ingredients.pop();
+      renderChips();
+      renderSuggestions();
+    }
+  });
+  inputEl.addEventListener("blur", () => addIngredient(inputEl.value));
+
+  function showError(msg) {
+    errorText.textContent = msg;
+    errorText.style.display = "block";
+  }
+  function clearError() { errorText.style.display = "none"; }
+
+  function setLoading(isLoading, mode) {
+    loading = isLoading;
+    suggestBtn.disabled = isLoading;
+    surpriseBtn.disabled = isLoading;
+    loadingCard.style.display = isLoading ? "flex" : "none";
+    if (isLoading) {
+      loadingText.textContent = mode === "surprise" ? "Dreaming up something fun…" : "Working out what to cook…";
+      resultContainer.innerHTML = "";
+    }
+  }
+
+  function renderDish(dish) {
+    const usesHtml = (dish.uses || []).map(u =>
+      `<li class="list-item"><span class="dot"></span>${escapeHtml(u)}</li>`).join("");
+    const extrasHtml = (dish.extras || []).length === 0
+      ? `<p class="no-extras">Nothing else — you're all set.</p>`
+      : `<ul class="plain-list">${dish.extras.map(x => `<li class="list-item"><span class="dot extra"></span>${escapeHtml(x)}</li>`).join("")}</ul>`;
+    const stepsHtml = (dish.steps || []).map((s, i) =>
+      `<li class="step"><span class="step-num">${i + 1}</span><span>${escapeHtml(s)}</span></li>`).join("");
+
+    resultContainer.innerHTML = `
+      <section class="result-card">
+        <div class="pin"></div>
+        <div class="eyebrow">tonight's pick</div>
+        <h2 class="dish-name">${escapeHtml(dish.dish_name || "")}</h2>
+        ${dish.tagline ? `<p class="tagline">${escapeHtml(dish.tagline)}</p>` : ""}
+        <div class="divider"></div>
+        <div class="lists-grid">
+          <div>
+            <h3 class="list-heading">🧺 From your fridge</h3>
+            <ul class="plain-list">${usesHtml}</ul>
+          </div>
+          <div>
+            <h3 class="list-heading">You'll also need</h3>
+            ${extrasHtml}
+          </div>
+        </div>
+        <div class="divider"></div>
+        <h3 class="list-heading">Steps</h3>
+        <ol class="steps">${stepsHtml}</ol>
+      </section>
+    `;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  const SYSTEM_PROMPT = "You are a warm, practical home-cooking assistant. Given a list of ingredients someone has at home, suggest exactly ONE dish they can make using mostly those ingredients. Respond with ONLY valid JSON, no markdown, no code fences, no commentary, matching exactly this schema: {\"dish_name\": string, \"tagline\": string (one short, appetizing sentence, no more than 18 words), \"uses\": string[] (the ingredients from their list that this dish actually uses — use their exact wording), \"extras\": string[] (short list of additional pantry items or staples they'd likely need to buy or grab, keep it minimal — empty array if truly nothing extra is needed), \"steps\": string[] (clear, numbered-in-order step-by-step cooking instructions, each one short imperative sentence, 4 to 8 steps)}";
+
+  async function suggestDish(mode) {
+    clearError();
+    if (ingredients.length === 0) {
+      showError("Add a few ingredients first.");
+      inputEl.focus();
+      return;
+    }
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "PASTE_YOUR_GEMINI_API_KEY_HERE") {
+      showError("This app hasn't been set up with a Gemini API key yet — the site owner needs to add one in the page's source before this works.");
+      return;
+    }
+
+    setLoading(true, mode);
+    const list = ingredients.join(", ");
+    const userPrompt = mode === "surprise"
+      ? `Here's what I have at home: ${list}. Suggest one creative, slightly unexpected dish I could make using mostly these ingredients — something more adventurous than the obvious choice, but still realistic to cook at home tonight.`
+      : `Here's what I have at home: ${list}. Suggest one simple, practical dish I can make tonight using mostly these ingredients.`;
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": GEMINI_API_KEY,
+          },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            generationConfig: { responseMimeType: "application/json" },
+          }),
+        }
+      );
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody?.error?.message || `Request failed (${response.status})`);
+      }
+      const data = await response.json();
+      const raw = data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
+      const cleaned = raw.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
+      const parsed = JSON.parse(cleaned);
+      renderDish(parsed);
+    } catch (e) {
+      showError(e.message && /api key/i.test(e.message) ? "That API key was rejected — check it in the page source." : "Couldn't come up with a dish just now — give it another try.");
+    } finally {
+      setLoading(false, mode);
+    }
+  }
+
+  suggestBtn.onclick = () => suggestDish("normal");
+  surpriseBtn.onclick = () => suggestDish("surprise");
+
+  renderChips();
+  renderSuggestions();
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
